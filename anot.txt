@@ -1,0 +1,3 @@
+No caso a nossa aplicação seria inicialmente para o gerenciamento das 4 lojas da rede Daury, em que somente os funcionarios teriam acesso. Eu estou desenvolvento o aplicativo Mobile com React Native, o framework Expo Go e o banco de dados com Firebase. A minha duvida seria sobre como se torna uma aplicação desse porte segura e confiavel, e se essa linguagem, framework e banco de dados são os ideais para desenvolver esse tipo de aplicação
+
+Como eu ainda não tenho experiencia no mercado e não sei exatamente como um grande aplicativo é feito, queria tirar essas duvidas para saber se estou no rumo certo
