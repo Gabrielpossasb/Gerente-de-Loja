@@ -1,3 +1,194 @@
+eas build -p android --profile preview
+
+
+
 No caso a nossa aplicação seria inicialmente para o gerenciamento das 4 lojas da rede Daury, em que somente os funcionarios teriam acesso. Eu estou desenvolvento o aplicativo Mobile com React Native, o framework Expo Go e o banco de dados com Firebase. A minha duvida seria sobre como se torna uma aplicação desse porte segura e confiavel, e se essa linguagem, framework e banco de dados são os ideais para desenvolver esse tipo de aplicação
 
 Como eu ainda não tenho experiencia no mercado e não sei exatamente como um grande aplicativo é feito, queria tirar essas duvidas para saber se estou no rumo certo
+
+import { collection, getDocs } from 'firebase/firestore';
+
+// Função para buscar todos os usuários
+const buscarTodosUsuarios = async () => {
+  const usersCollection = collection(db, 'users');
+  const usersSnapshot = await getDocs(usersCollection);
+  const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return usersList;
+};
+
+////////////////////////////////
+
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+
+// Inicialize o Firestore
+const db = getFirestore();
+
+// Função para atualizar dados do usuário
+const atualizarDadosUsuario = async (userId, novosDados) => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, novosDados);
+};
+
+// Exemplo de uso
+atualizarDadosUsuario('userUID1', {
+  nome: 'Novo Nome',
+  loja: 'Nova Loja',
+  nivelAcesso: 'Novo Nivel'
+});
+////////////////////////////////
+
+import { getFirestore, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+
+// Inicialize o Firestore
+const db = getFirestore();
+
+// Função para adicionar vídeo assistido
+const adicionarVideoAssistido = async (userId, video) => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, {
+    videosAssistidos: arrayUnion(video)
+  });
+};
+
+// Exemplo de uso
+adicionarVideoAssistido('userUID1', {
+  videoId: 'video3',
+  progresso: 50
+});
+
+////////////////////////////////////////////////
+
+import { collection, getDocs } from 'firebase/firestore';
+
+// Função para buscar todos os usuários
+const buscarTodosUsuarios = async () => {
+  const usersCollection = collection(db, 'users');
+  const usersSnapshot = await getDocs(usersCollection);
+  const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return usersList;
+};
+
+////////////////////////////////////////////////
+
+npm install firebase-admin
+
+//
+
+const admin = require('firebase-admin');
+
+// Inicialize o Admin SDK com suas credenciais
+admin.initializeApp({
+  credential: admin.credential.cert(require('./path/to/your/serviceAccountKey.json')),
+  databaseURL: 'https://your-database-name.firebaseio.com'
+});
+
+const db = admin.firestore();
+
+//
+
+const updateAllUsers = async () => {
+  const usersCollection = db.collection('users');
+  
+  // Obter todos os documentos da coleção 'users'
+  const snapshot = await usersCollection.get();
+  
+  // Verificar se há documentos
+  if (snapshot.empty) {
+    console.log('Nenhum documento encontrado.');
+    return;
+  }
+  
+  // Atualizar cada documento
+  const batch = db.batch();
+  
+  snapshot.forEach(doc => {
+    const userRef = usersCollection.doc(doc.id);
+    batch.update(userRef, { novoCampo: 'valorInicial' }); // Adicione o novo campo com um valor inicial
+  });
+  
+  // Executar a atualização em lote
+  await batch.commit();
+  console.log('Todos os documentos foram atualizados com sucesso.');
+};
+
+// Executar a função
+updateAllUsers().catch(console.error);
+
+
+E se por exemplo mais para frente eu precise adcionar um novo campo a base de dados de todos os usuarios, teria que adcionar um por um ou teria uma maneira de atualiza-los de uma vez?
+
+//////////////////////////////////////////////////////////////////////////
+
+// ATUALIZAR TRILHA DOS USUARIOS
+
+// No momento em que se fizer a alteração de uma trilha, todos os usuarios que utilizam ela, serao atualizados
+
+interface TrilhaItem {
+  videoID: string;
+  watch: boolean;
+}
+
+// Definindo o tipo para a sequência de vídeos
+interface VideoSequence {
+  videos: string[]; // Lista de videoIDs na ordem desejada
+}
+
+// Definindo o tipo para o documento de usuário
+interface UserData {
+  trilha: TrilhaItem[];
+}
+
+
+
+
+import { getFirestore, collection, doc, getDoc } from "firebase/firestore";
+
+const db = getFirestore();
+
+const getVideoSequence = async (): Promise<VideoSequence> => {
+  const videoSequenceRef = doc(db, 'videoSequence', 'defaultSequence');
+  const docSnap = await getDoc(videoSequenceRef);
+
+  if (docSnap.exists()) {
+    return docSnap.data() as VideoSequence; // Assegura que o tipo está correto
+  } else {
+    throw new Error('Video sequence not found');
+  }
+};
+
+
+import { getFirestore, collection, query, where, getDocs, writeBatch, DocumentSnapshot } from "firebase/firestore";
+
+const updateUserTrilhaByCargo = async (cargo: string) => {
+  const videoSequence = await getVideoSequence();
+  const usersRef = collection(db, 'users');
+
+  // Cria uma consulta para filtrar usuários pelo cargo
+  const q = query(usersRef, where('cargo', '==', cargo));
+  const userSnapshot = await getDocs(q);
+
+  const batch = writeBatch(db);
+
+  userSnapshot.forEach((docSnap: DocumentSnapshot<UserData>) => {
+    const userData = docSnap.data();
+    const currentTrilha = userData?.trilha || [];
+
+    // Cria um mapa para fácil acesso
+    const currentTrilhaMap = new Map<string, TrilhaItem>(currentTrilha.map(v => [v.videoID, v]));
+
+    // Atualiza a trilha com base na sequência de vídeos
+    const updatedTrilha: TrilhaItem[] = videoSequence.videos.map(videoID => {
+      const existingEntry = currentTrilhaMap.get(videoID);
+      return {
+        videoID,
+        watch: existingEntry ? existingEntry.watch : false
+      };
+    });
+
+    // Prepara a atualização no Firestore
+    batch.update(docSnap.ref, { trilha: updatedTrilha });
+  });
+
+  await batch.commit();
+  console.log(`Trilha updated for users with cargo: ${cargo}`);
+};

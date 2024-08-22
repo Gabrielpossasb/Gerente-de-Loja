@@ -1,21 +1,20 @@
-
-import React, { createContext, ReactNode, useEffect, useState } from 'react';
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import React, { createContext, ReactNode, useState } from 'react';
 import { auth, db } from '../services/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { trilhaType, userDataType } from '../types/customTypes';
 
-export interface userDataType {
-    nome: string,
-    loja: string,
-    usuario: string
-}
+
 
 interface DataUserProviderProps {
     children: ReactNode;
- }
+}
 
 // Definindo o tipo para os dados do contexto
 interface DataUserContextData {
-  userData: userDataType;
+    userData: userDataType;
+    getUserData: () => void;
+    trilha: trilhaType[];
+    loading: boolean
 }
 
 // Criando o contexto
@@ -24,30 +23,46 @@ export const DataUserContext = createContext<DataUserContextData>(
 );
 
 // Criando um componente de provedor para encapsular outros componentes
-export function DataUserProvider ({ children }: DataUserProviderProps) {
-  
+export function DataUserProvider({ children }: DataUserProviderProps) {
+
     const [userData, setUserData] = useState<userDataType>({} as userDataType);
 
-    useEffect(() => {
-        
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                const docRef = doc(db, `${user.email?.slice(0,2)}`, "userData");
-                const docSnap = await getDoc(docRef);
+    const [trilha, setTrilha] = useState<trilhaType[]>([]);
 
-                if (docSnap.exists()) {
-                    const items = docSnap.data().data
-                    setUserData(items)
-                }
+    const [loading, setLoading] = useState(true);
 
+    const getUserData = async () => {
+        const user = auth.currentUser;
+        if (user) {
+            const docRef = doc(db, `users`, user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const items: any = docSnap.data()
+                setUserData(items)
             }
-        });
 
-        return () => unsubscribe();
-    }, []); 
+            const trilhaCollection = collection(db, 'users', user.uid, 'trilhas');
+            const trilhaSnapshot = await getDocs(trilhaCollection);
+            const trilhaList: trilhaType[] = trilhaSnapshot.docs.map(doc => {
+                const data = doc.data();
+                console.log(data)
+                // Converta os dados para o tipo VideoInfoProps
+                const trilhaInfo: trilhaType = {
+                    name: data.name,
+                    description: data.description,
+                    videos: data.videos
+                };
+                return trilhaInfo;
+            });
+
+            setTrilha(trilhaList)
+            setLoading(false)
+        }
+    }
 
     return (
-        <DataUserContext.Provider value={{userData}}>
+        <DataUserContext.Provider value={{ userData, getUserData, trilha, loading }}>
             {children}
         </DataUserContext.Provider>
     );

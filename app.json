@@ -17,21 +17,18 @@
       "infoPlist": {
         "NSCameraUsageDescription": "We need your permission to access the camera"
       },
-      "permissions": {
-        "camera": {
-          "scope": "system"
-        }
-      }
+      "bundleIdentifier": "com.gerenteloja2917.gerente"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "permissions": [
-          "CAMERA",
-          "CAMERA_ROLL"
-        ]
-      }
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.gerenteloja2917.gerente"
     },
     "web": {
       "bundler": "metro",
@@ -46,10 +43,19 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "20c24429-95ba-479b-a631-6b59c80164b5"
+      }
     }
   }
 }

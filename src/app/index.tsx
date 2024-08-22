@@ -1,43 +1,56 @@
-import CheckList from '@/src/components/CheckList';
-import Header from '@/src/components/Header';
-import { CompletionProvider } from '@/src/hook/useCompletion';
-import { DataUserProvider } from '@/src/hook/useDataUser';
-import { View } from 'react-native';
-import '../styles/global.css';
+import Routes from "@/src/routes";
+import { Alert, BackHandler, StatusBar } from "react-native";
+import '../styles/global.css'
+import { useEffect } from "react";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 
+export default function Page() {
 
-export default function App() {
+   const navigation = useNavigation();
 
-  /*
-  const [permission, requestPermission] = useCameraPermissions();
+   useEffect(() => {
 
-  if (!permission) {
-    // Camera permissions are still loading.
-    return <View />;
-  }
+      const onBackPress = () => {
 
-  if (!permission.granted) {
-    // Camera permissions are not granted yet.
-    return (
-      <View style={styles.container}>
-        <Text style={{ textAlign: 'center' }}>We need your permission to show the camera</Text>
-        <TouchableOpacityStyled className='bg-blue-950 flex self-center w-40 items-center rounded-md h-10 justify-center' onPress={requestPermission}>
-          <TextStyled className='text-white font-bold text-xl'>Give Permission</TextStyled>
-        </TouchableOpacityStyled>
-      </View>
-    );
-  }
-  */
- 
+         console.log(navigation.canGoBack())
 
-  return (
-    <CompletionProvider>
-      <DataUserProvider>
-        <View className=''>
-          <Header/>
-          <CheckList/>
-        </View>
-      </DataUserProvider>
-    </CompletionProvider>
-  );
+         if (navigation.canGoBack()) {
+            navigation.goBack();
+         } else {
+            Alert.alert(
+               "Sair do aplicativo",
+               "Você tem certeza que deseja sair?",
+               [
+                  {
+                     text: "Não",
+                     onPress: () => null,
+                     style: "cancel",
+                  },
+                  {
+                     text: "Sim",
+                     onPress: () => BackHandler.exitApp(),
+                  },
+               ]
+            );
+         }
+         return true;
+      };
+
+      const backHandler = BackHandler.addEventListener(
+         'hardwareBackPress',
+         onBackPress
+      );
+
+      return () => backHandler.remove();
+   }, []);
+
+   return (
+      <>
+         <StatusBar
+            backgroundColor="#000" // Funciona apenas no Android
+            barStyle="dark-content" // Define o estilo do conteúdo da StatusBar
+         />
+         <Routes />
+      </>
+   );
 }
