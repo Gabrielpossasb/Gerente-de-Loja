@@ -6,7 +6,6 @@ import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation
 import { MotiView } from "moti";
 import React, { useContext, useState } from "react";
 import { Alert, BackHandler, Image, Pressable, ScrollView, Text, View } from "react-native";
-import Svg, { Ellipse } from "react-native-svg";
 
 export default function Trilha() {
 
@@ -130,7 +129,7 @@ export default function Trilha() {
 
             {/* Aba 2 */}
 
-            <View className="flex flex-col  w-[280px]">
+            <View className="flex flex-col mt-6 w-[280px]">
 
                {Array.isArray(selectTrilha.videos) && selectTrilha.videos.length > 0 && nextVideo != '' ? (
                   selectTrilha.videos.map((val, id) => {

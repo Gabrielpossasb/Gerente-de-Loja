@@ -1,7 +1,7 @@
 import { DataUserContext } from "@/src/hook/useDataUser";
 import { auth, db } from "@/src/services/firebaseConfig";
 import { stylesShadow } from "@/src/styles/styles";
-import { trilhaType, userDataType } from "@/src/types/customTypes";
+import { userDataType } from "@/src/types/customTypes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
@@ -15,6 +15,14 @@ import ButtonGoBack from "../MyComponents/ButtonGoBack";
 import CustomButton from "../MyComponents/CustomButton";
 import CustomInput from "../MyComponents/CustomInput";
 import CustomPicker from "../MyComponents/CustomPicker";
+
+const formatDate = (date: Date): string => {
+   const day = date.getDate().toString().padStart(2, '0');
+   const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Janeiro é 0
+   const year = date.getFullYear().toString().slice(-2); // Últimos 2 dígitos do ano
+
+   return `${day}/${month}/${year}`;
+};
 
 type Lojas = {
    label: string,
@@ -62,11 +70,12 @@ export default function CadastroUsuario() {
 
          const trilhaInfo: Trilhas = {
             label: data.name,
-            value: data.name.charAt(0).toLowerCase() + data.name.slice(1)
+            value: data.id
          };
 
          return trilhaInfo;
-      });
+      })
+      .filter(trilha => trilha.value !== 'semana');
 
       setTrilhas([{ label: "Selecione a Trilha", value: '' }, ...trilhasList])
    }
@@ -122,7 +131,16 @@ export default function CadastroUsuario() {
                   <Text className="text-xl font-bold text-gray-600 self-start">Preencha os dados do novo usuário:</Text>
 
                   <Formik
-                     initialValues={{ lojaID: '', name: '', displayName: '', acesso: '', email: '', confirmPassword: '', password: '', trilha: '' }}
+                     initialValues={{
+                        lojaID: '',
+                        name: '',
+                        displayName: '',
+                        acesso: '',
+                        email: '',
+                        confirmPassword: '',
+                        password: '',
+                        trilha: ''
+                     }}
                      validationSchema={validationSchema}
                      onSubmit={async (values, { resetForm, setSubmitting }) => {
                         setLoadingCreateUser(true)
@@ -130,7 +148,6 @@ export default function CadastroUsuario() {
                         const selectLoja = lojas.filter((val) => { return val.value == values.lojaID && val })
 
                         try {
-
                            // 1. Obter o token do usuário atual
                            // const currentUser = authR.currentUser;
                            // if (!currentUser) throw new Error("Nenhum usuário está logado.");
@@ -163,64 +180,32 @@ export default function CadastroUsuario() {
                               lojaID: selectLoja[0].value,
                               name: values.name,
                               uid: uid,
-                              watchVideos: [],
-                              score: 0
+                              watchedVideos: [],
+                              score: 0,
+                              createdAt: formatDate(new Date()),
+                              fixedTrackID: values.trilha,
+                              weeklyTrackID: 'semana'
                            }
 
                            // Adicionar informações adicionais ao Firestore
                            await setDoc(doc(db, 'users', uid), userInfo);
 
-                           try {
-                              const docRef = doc(db, 'trilhas', values.trilha);
-                              const docSnap = await getDoc(docRef);
-
-                              if (docSnap.exists()) {
-                                 const trilha: trilhaType = docSnap.data() as trilhaType
-
-                                 console.log(trilha)
-
-
-                                 const trilhaRef = doc(db, 'users', uid, 'trilhas', values.trilha);
-
-                                 // Adicionar um array no documento da subcoleção 'trilha'
-                                 await setDoc(trilhaRef, trilha);
+                           setSubmitting(false);
+                           resetForm({
+                              values: {
+                                 lojaID: '',
+                                 name: '',
+                                 displayName: '',
+                                 acesso: '',
+                                 email: '',
+                                 confirmPassword: '',
+                                 password: '',
+                                 trilha: ''
                               }
+                           })
+                           setLoadingCreateUser(false)
 
-                              setSubmitting(false);
-                              resetForm({
-                                 values: {
-                                    lojaID: '',
-                                    name: '',
-                                    displayName: '',
-                                    acesso: '',
-                                    email: '',
-                                    confirmPassword: '',
-                                    password: '',
-                                    trilha: ''
-                                 }
-                              })
-                              setLoadingCreateUser(false)
-
-                              setUserCreate(true)
-
-                              console.log('Trilha do usuario definida com sucesso')
-                           } catch (error) {
-                              console.log('Erro ao definir a trilha do usuario', error);
-                              setSubmitting(false);
-                              resetForm({
-                                 values: {
-                                    lojaID: '',
-                                    name: '',
-                                    displayName: '',
-                                    acesso: '',
-                                    email: '',
-                                    confirmPassword: '',
-                                    password: '',
-                                    trilha: ''
-                                 }
-                              })
-                              setLoadingCreateUser(false)
-                           }
+                           setUserCreate(true)
 
                            console.log('Usuário criado com sucesso e informações adicionais salvas no Firestore.');
                         } catch (error) {

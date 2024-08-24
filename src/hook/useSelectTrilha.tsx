@@ -1,13 +1,13 @@
 import React, { createContext, ReactNode, useState } from 'react';
-import { trilhaType } from '../types/customTypes';
+import { trilhaFixedType, trilhaSemanaType } from '../types/customTypes';
 
 interface SelectTrilhaProviderProps {
    children: ReactNode;
 }
 
 interface SelectTrilhaContextData {
-   selectTrilha: trilhaType;
-   setSelectTrilhaData: (a: trilhaType) => void;
+   selectTrilha: trilhaFixedType | trilhaSemanaType;
+   setSelectTrilhaData: (a: trilhaFixedType | trilhaSemanaType) => void;
 }
 
 export const SelectTrilhaContext = createContext<SelectTrilhaContextData>(
@@ -16,9 +16,9 @@ export const SelectTrilhaContext = createContext<SelectTrilhaContextData>(
 
 export function SelectTrilhaProvider({ children }: SelectTrilhaProviderProps) {
 
-   const [selectTrilha, setSelectTrilha] = useState<trilhaType>({} as trilhaType);
+   const [selectTrilha, setSelectTrilha] = useState<trilhaFixedType | trilhaSemanaType>({} as trilhaFixedType | trilhaSemanaType);
 
-   const setSelectTrilhaData = async (val: trilhaType) => {
+   const setSelectTrilhaData = async (val: trilhaFixedType | trilhaSemanaType) => {
       setSelectTrilha(val)
    }
 

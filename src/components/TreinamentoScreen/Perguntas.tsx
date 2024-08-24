@@ -55,7 +55,7 @@ export default function Perguntas() {
 
    const videoInfo = params.videoInfo
 
-   const { userData, getUserData, trilha } = useContext(DataUserContext)
+   const { userData, getUserData } = useContext(DataUserContext)
    const { setSelectTrilhaData, selectTrilha } = useContext(SelectTrilhaContext)
 
    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -116,9 +116,10 @@ export default function Perguntas() {
    };
 
    const handleCheckVideo = async () => {
-      setConcluedQuestions(true)
+      setConcluedQuestions(true);
 
-      const updatedTrilha = selectTrilha.videos.map((val: any) => {
+      // Atualiza o estado do vídeo para 'watch: true' apenas para o vídeo assistido
+      const updatedTrilha = selectTrilha.videos.map((val: { videoID: string; watch: boolean }) => {
          if (val.videoID === videoInfo.videoID) {
             return { ...val, watch: true };
          }
@@ -126,10 +127,11 @@ export default function Perguntas() {
       });
 
       console.log('O vídeo terminou');
+
       // Atualize o estado do vídeo no banco de dados
-      const userRef = doc(db, 'users', userData.uid, 'trilhas', selectTrilha.name.charAt(0).toLowerCase() + selectTrilha.name.slice(1));
+      const userRef = doc(db, 'users', userData.uid);
       await updateDoc(userRef, {
-         videos: updatedTrilha
+         watchedVideos: updatedTrilha.filter(video => video.watch)  // Atualiza somente os vídeos que foram assistidos
       });
 
       const userRefScore = doc(db, 'users', userData.uid);
@@ -138,16 +140,16 @@ export default function Perguntas() {
       });
 
       console.log('Estado do vídeo atualizado para assistido');
+
+      // Atualize o estado de selectTrilha com os vídeos atualizados
       setSelectTrilhaData({
          ...selectTrilha,
-         videos: updatedTrilha as [{
-            videoID: string;
-            watch: boolean;
-         }]
-      })
-      getUserData()
-      setConcluedQuestions(false)
-      closeQuestionsAndVideo()
+         videos: updatedTrilha
+      });
+
+      getUserData();  // Recarrega os dados do usuário
+      setConcluedQuestions(false);
+      closeQuestionsAndVideo();
    }
 
    useEffect(() => {
@@ -166,9 +168,9 @@ export default function Perguntas() {
             navigation.navigate('PlayerVideo', { videoID: params.videoInfo.videoID })
             return true; // Retornar true impede o comportamento padrão de fechar o app
          };
-   
+
          BackHandler.addEventListener('hardwareBackPress', onBackPress);
-   
+
          return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
       }, [])
    );

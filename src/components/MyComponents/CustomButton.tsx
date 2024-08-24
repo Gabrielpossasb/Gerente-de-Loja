@@ -35,7 +35,7 @@ export default function CustomButton({ submit, disable, color, children, ...rest
                   from={{ translateY: 0 }}
                   animate={{ translateY: pressed ? [6,0] : 0 }}
                   transition={{ type: 'timing', duration: 200 }}
-                  className=""
+                  className="w-full"
                >
                   {children}
                </MotiView>

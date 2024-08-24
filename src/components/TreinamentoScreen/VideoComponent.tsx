@@ -87,7 +87,7 @@ export default function VideoComponent() {
    const startHideControlsTimer = () => {
       setTimeout(() => {
          setControlsVisible(false);
-      }, 8000);
+      }, 5000);
    };
 
    useEffect(() => {

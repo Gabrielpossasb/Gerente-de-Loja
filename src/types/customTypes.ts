@@ -33,17 +33,34 @@ export interface userDataType {
    lojaID: string,
    acesso: string,
    uid: string,
-   watchVideos: string[],
-   score: number
+   watchedVideos: {
+      videoID: string,
+      watch: boolean
+   }[],
+   score: number,
+   weeklyTrackID: string,
+   fixedTrackID: string,
+   createdAt: string
 }
 
-export interface trilhaType {
+export interface trilhaFixedType {
+   id: string,
    name: string,
    description: string,
-   videos: [
-       {
-           videoID: string,
-           watch: boolean
-       }
-   ],
+   createdAt: string,
+   videos: {
+      videoID: string,
+      watch: boolean
+   }[],
+}
+export interface trilhaSemanaType {
+   id: string,
+   name: string,
+   description: string,
+   end: string,
+   start: string,
+   videos: {
+      videoID: string,
+      watch: boolean
+   }[],
 }

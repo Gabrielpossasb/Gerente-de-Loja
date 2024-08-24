@@ -1,69 +1,96 @@
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import React, { createContext, ReactNode, useState } from 'react';
 import { auth, db } from '../services/firebaseConfig';
-import { trilhaType, userDataType } from '../types/customTypes';
-
-
+import { trilhaFixedType, trilhaSemanaType, userDataType } from '../types/customTypes';
 
 interface DataUserProviderProps {
-    children: ReactNode;
+   children: ReactNode;
 }
 
-// Definindo o tipo para os dados do contexto
 interface DataUserContextData {
-    userData: userDataType;
-    getUserData: () => void;
-    trilha: trilhaType[];
-    loading: boolean
+   userData: userDataType;
+   getUserData: () => void;
+   trilhaFixed: trilhaFixedType;
+   trilhaSemana: trilhaSemanaType;
+   loading: boolean
 }
 
-// Criando o contexto
 export const DataUserContext = createContext<DataUserContextData>(
-    {} as DataUserContextData
+   {} as DataUserContextData
 );
 
-// Criando um componente de provedor para encapsular outros componentes
 export function DataUserProvider({ children }: DataUserProviderProps) {
 
-    const [userData, setUserData] = useState<userDataType>({} as userDataType);
+   const [userData, setUserData] = useState<userDataType>({} as userDataType);
 
-    const [trilha, setTrilha] = useState<trilhaType[]>([]);
+   const [trilhaFixed, setTrilhaFixed] = useState<trilhaFixedType>({} as trilhaFixedType);
+   const [trilhaSemana, setTrilhaSemana] = useState<trilhaSemanaType>({} as trilhaSemanaType);
 
-    const [loading, setLoading] = useState(true);
+   const [loading, setLoading] = useState(true);
 
-    const getUserData = async () => {
-        const user = auth.currentUser;
-        if (user) {
-            const docRef = doc(db, `users`, user.uid);
-            const docSnap = await getDoc(docRef);
+   const getUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+         const docRef = doc(db, `users`, user.uid);
+         const docSnap = await getDoc(docRef);
 
-            if (docSnap.exists()) {
-                const items: any = docSnap.data()
-                setUserData(items)
+         if (docSnap.exists()) {
+            const items: any = docSnap.data();
+            const itemsTrilha: userDataType = items;
+            setUserData(itemsTrilha);
+
+            // Passo 1: Obtenha as trilhas fixas e semanais
+            const docRefTrilha = doc(db, 'trilhas', itemsTrilha.fixedTrackID);
+            const docSnapTrilha = await getDoc(docRefTrilha);
+            let fixedTrackVideos = [];
+            if (docSnapTrilha.exists()) {
+               const items: any = docSnapTrilha.data();
+               setTrilhaFixed(items);
+               fixedTrackVideos = items.videos || [];
+               console.log('Trilha Fixa:', items);
             }
 
-            const trilhaCollection = collection(db, 'users', user.uid, 'trilhas');
-            const trilhaSnapshot = await getDocs(trilhaCollection);
-            const trilhaList: trilhaType[] = trilhaSnapshot.docs.map(doc => {
-                const data = doc.data();
-                console.log(data)
-                // Converta os dados para o tipo VideoInfoProps
-                const trilhaInfo: trilhaType = {
-                    name: data.name,
-                    description: data.description,
-                    videos: data.videos
-                };
-                return trilhaInfo;
-            });
+            const docRefTrilhaSemana = doc(db, 'trilhas', itemsTrilha.weeklyTrackID);
+            const docSnapTrilhaSemana = await getDoc(docRefTrilhaSemana);
+            let weeklyTrackVideos = [];
+            if (docSnapTrilhaSemana.exists()) {
+               const items: any = docSnapTrilhaSemana.data();
+               setTrilhaSemana(items);
+               weeklyTrackVideos = items.videos || [];
+               console.log('Trilha Semana:', items);
+            }
 
-            setTrilha(trilhaList)
-            setLoading(false)
-        }
-    }
+            // Passo 2: Combine vídeos das trilhas fixas e semanais
+            const allTrackVideos = [...fixedTrackVideos, ...weeklyTrackVideos];
 
-    return (
-        <DataUserContext.Provider value={{ userData, getUserData, trilha, loading }}>
-            {children}
-        </DataUserContext.Provider>
-    );
+            // Passo 3: Verifique vídeos novos
+            const watchedVideos = itemsTrilha.watchedVideos || [];
+
+            // Encontrar vídeos novos que estão nas trilhas mas não no progresso do usuário
+            const newVideos = allTrackVideos.filter(
+               (trackVideo) => !watchedVideos.some((watchedVideo) => watchedVideo.videoID === trackVideo.videoID)
+            );
+
+            // Passo 4: Atualize o progresso do usuário se necessário
+            if (newVideos.length > 0) {
+               const updatedWatchedVideos = watchedVideos.concat(
+                  newVideos.map((newVideo) => ({ videoID: newVideo.videoID, watch: false }))
+               );
+
+               if (updatedWatchedVideos.length > 0) {
+                  await updateDoc(docRef, {
+                    watchedVideos: updatedWatchedVideos,
+                  });
+                  console.log('Progresso do usuário atualizado com novos vídeos.');
+                }
+            }
+         }
+      }
+   }
+
+   return (
+      <DataUserContext.Provider value={{ userData, getUserData, trilhaFixed, trilhaSemana, loading }}>
+         {children}
+      </DataUserContext.Provider>
+   );
 };

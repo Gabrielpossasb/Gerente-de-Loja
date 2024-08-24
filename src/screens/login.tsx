@@ -36,8 +36,8 @@ export default function Login() {
 	}
 
 	return (
-		<ScrollView className="flex-1 bg-white">
-			<View className="p-10 gap-6 flex flex-1 bg-white flex-col pt-16">
+		<ScrollView className="flex-1 bg-white flex">
+			<View className="p-10 gap-6 flex flex-1 h-screen justify-center bg-white flex-col pt-16">
 
 
 				<View className="flex gap-1 items-center">
@@ -83,7 +83,7 @@ export default function Login() {
 				</View>
 
 				<CustomButton color="yellow" submit={() => handleLogin(email, password)} disable={false}>
-					<View className="px-20 p-2 rounded-xl flex flex-row items-center justify-center gap-4 bg-yellow-400">
+					<View className="px-20 w-full p-2 rounded-xl flex flex-row items-center justify-center gap-4 bg-yellow-400">
 						<Text className="text-white text-2xl font-bold">ENTRAR</Text>
 						<MaterialCommunityIcons name="login" size={24} color="white" />
 					</View>
