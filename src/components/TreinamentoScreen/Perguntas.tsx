@@ -5,13 +5,14 @@ import { db } from "@/src/services/firebaseConfig";
 import { stylesShadow } from "@/src/styles/styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { NavigationProp, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import { doc, increment, updateDoc } from "firebase/firestore";
 import LottieView from 'lottie-react-native';
 import { MotiView } from "moti";
 import React, { useContext, useEffect, useState } from "react";
 import { BackHandler, Image, Pressable, ScrollView, Text, View } from "react-native";
 import CustomButton from "../MyComponents/CustomButton";
-import { useFocusEffect } from "expo-router";
+import { trilhaFixedType, trilhaSemanaType } from "@/src/types/customTypes";
 
 const successMessages = [
    "Ótimo trabalho, continue assim! 😉",
@@ -48,6 +49,10 @@ const errorMessages = [
    "Tá jogando dardos no escuro? 🎯❌"
 ];
 
+function shuffleArray(array: any[]) {
+   return array.sort(() => Math.random() - 0.5);
+}
+
 export default function Perguntas() {
 
    const navigation = useNavigation<NavigationProp<TreinamentoStackRoutesParamsList>>()
@@ -56,7 +61,7 @@ export default function Perguntas() {
    const videoInfo = params.videoInfo
 
    const { userData, getUserData } = useContext(DataUserContext)
-   const { setSelectTrilhaData, selectTrilha } = useContext(SelectTrilhaContext)
+   const { setSelectTrilhaData, selectTrilha, manageTrack } = useContext(SelectTrilhaContext)
 
    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -71,6 +76,8 @@ export default function Perguntas() {
 
    const [concluedQuestions, setConcluedQuestions] = useState(false)
 
+   const videoWatched = userData.watchedVideos.some(watchedVideo => watchedVideo.uniqueID === params.uniqueID)
+
    const confettiPositions = [
       { "left": -50, "top": 10 },
       { "left": 150, "top": 10 },
@@ -79,14 +86,26 @@ export default function Perguntas() {
       { "left": 120, "top": 280 }
    ];
 
-   const currentQuestion = videoInfo.questions[currentQuestionIndex];
+   const [shuffledQuestions, setShuffledQuestions] = useState(videoInfo.questions);
+
+   const currentQuestion = shuffledQuestions[currentQuestionIndex];
+
+   useEffect(() => {
+      setShuffledQuestions(prevQuestions => {
+         const firstQuestion = {
+            ...prevQuestions[0],
+            alternatives: shuffleArray(prevQuestions[0].alternatives),
+         };
+         return [firstQuestion, ...prevQuestions.slice(1)];
+      });
+   }, []);
 
    const closeQuestions = () => {
-      navigation.navigate('PlayerVideo', { videoID: params.videoInfo.videoID })
+      navigation.navigate('PlayerVideo', { videoID: params.videoInfo.videoID, uniqueID: params.uniqueID })
    }
 
    const closeQuestionsAndVideo = () => {
-      navigation.navigate('Trilha')
+      navigation.navigate('Trilha', { key: Array.isArray(selectTrilha) ? 'semana' : 'fixa' })
    }
 
    const handleAnswer = () => {
@@ -108,9 +127,17 @@ export default function Perguntas() {
    const goToNextQuestion = () => {
       setShowAnswer(false);
       if (currentQuestionIndex < videoInfo.questions.length - 1) {
-         setCurrentQuestionIndex(currentQuestionIndex + 1);
+         // Incrementa o índice da pergunta e aleatoriza as alternativas para a nova pergunta
+         const nextIndex = currentQuestionIndex + 1;
+         const newShuffledQuestions = [...shuffledQuestions];
+         newShuffledQuestions[nextIndex] = {
+            ...newShuffledQuestions[nextIndex],
+            alternatives: shuffleArray(newShuffledQuestions[nextIndex].alternatives),
+         };
+         setShuffledQuestions(newShuffledQuestions);
+         setCurrentQuestionIndex(nextIndex);
       } else {
-         setShowScore(true)
+         setShowScore(true);
       }
       setSelectedAnswer(null);
    };
@@ -118,39 +145,81 @@ export default function Perguntas() {
    const handleCheckVideo = async () => {
       setConcluedQuestions(true);
 
-      // Atualiza o estado do vídeo para 'watch: true' apenas para o vídeo assistido
-      const updatedTrilha = selectTrilha.videos.map((val: { videoID: string; watch: boolean }) => {
-         if (val.videoID === videoInfo.videoID) {
-            return { ...val, watch: true };
-         }
-         return val;
-      });
-
-      console.log('O vídeo terminou');
-
-      // Atualize o estado do vídeo no banco de dados
       const userRef = doc(db, 'users', userData.uid);
-      await updateDoc(userRef, {
-         watchedVideos: updatedTrilha.filter(video => video.watch)  // Atualiza somente os vídeos que foram assistidos
-      });
 
-      const userRefScore = doc(db, 'users', userData.uid);
-      await updateDoc(userRefScore, {
-         score: increment(score)
-      });
+      let updatedTrilha: trilhaFixedType | trilhaSemanaType[] = [];
 
-      console.log('Estado do vídeo atualizado para assistido');
+      if (!videoWatched) {
+         // Verifica se está lidando com a trilha fixa (objeto) ou a trilha semanal (array de objetos)
+         if (Array.isArray(selectTrilha)) {
+            // Trilha semanal (array de objetos)
+            updatedTrilha = selectTrilha.map((trilhaSemana: any) => {
+               const hasVideo = trilhaSemana.videos.some((val: { uniqueID: string }) => val.uniqueID === params.uniqueID);
+               if (hasVideo) {
+                  // Atualiza o vídeo da trilha semanal
+                  const updatedVideos = trilhaSemana.videos.map((val: { uniqueID: string; watch: boolean }) => {
+                     if (val.uniqueID === params.uniqueID) {
+                        return { ...val, watch: true }; // Marca como assistido
+                     }
+                     return val;
+                  });
+                  return { ...trilhaSemana, videos: updatedVideos }; // Retorna trilha semanal com vídeos atualizados
+               }
+               return trilhaSemana; // Retorna a trilha que não precisa ser atualizada
+            });
+            console.log('Perguntas Screen/ Trilha atualizada:', updatedTrilha[0].videos);
+            await manageTrack(updatedTrilha, "semana")
+         } else {
+            // Trilha fixa (objeto)
+            updatedTrilha = {
+               ...selectTrilha,
+               videos: selectTrilha.videos.map((val) => {
+                  if (val.uniqueID === params.uniqueID) {
+                     return { ...val, watch: true }; // Marca o vídeo como assistido
+                  }
+                  return val;
+               }),
+            };
+            await manageTrack(updatedTrilha, 'fixa' )
 
-      // Atualize o estado de selectTrilha com os vídeos atualizados
-      setSelectTrilhaData({
-         ...selectTrilha,
-         videos: updatedTrilha
-      });
+            if (selectTrilha.id == 'bemVindo') {
+               const allWatched = updatedTrilha.videos.every(video => video.watch);
 
-      getUserData();  // Recarrega os dados do usuário
+               if (allWatched) {
+                  await updateDoc(userRef, { welcomeTrackCompleted: true });
+                }
+            }
+         }
+
+         const existingWatchedVideos = userData.watchedVideos || [];
+
+         // Atualize os vídeos assistidos no Firestore
+         const watchedVideos = [...existingWatchedVideos, { videoID: videoInfo.videoID, uniqueID: params.uniqueID }]
+
+         console.log('Perguntas Screen/ Videos Assistidos do usuario:', watchedVideos);
+
+         // Atualizar no Firestore
+         await updateDoc(userRef, {
+            watchedVideos: watchedVideos,
+         });
+
+         // Atualiza a pontuação do usuário
+         await updateDoc(userRef, {
+            score: increment(score),
+         });
+
+         // Atualize o estado do `selectTrilha`
+         console.log('Estado do vídeo atualizado para assistido e pontuação adicionada');
+      } else {
+         console.log('Vídeo já foi assistido anteriormente, pontuação não adicionada');
+      }
+      
+      getUserData();
       setConcluedQuestions(false);
       closeQuestionsAndVideo();
-   }
+   };
+
+
 
    useEffect(() => {
       if (showScore) {
@@ -165,7 +234,7 @@ export default function Perguntas() {
    useFocusEffect(
       React.useCallback(() => {
          const onBackPress = () => {
-            navigation.navigate('PlayerVideo', { videoID: params.videoInfo.videoID })
+            navigation.navigate('PlayerVideo', { videoID: params.videoInfo.videoID, uniqueID: params.uniqueID })
             return true; // Retornar true impede o comportamento padrão de fechar o app
          };
 
@@ -264,11 +333,12 @@ export default function Perguntas() {
 
                      </View>
 
-                     <View className="flex flex-row items-center justify-center">
-                        <Text className="text-3xl mt-2 font-bold text-gray-500">+ {score}</Text>
-                        <Image className='w-9 h-9' source={require('../../assets/images/diamante.png')} />
-                     </View>
-
+                     {!videoWatched && (
+                        <View className="flex flex-row items-center gap-2 justify-center">
+                           <Text className="text-3xl font-bold text-gray-500">+ {score}</Text>
+                           <Image className='w-7 h-7' source={require('../../assets/images/diamante.png')} />
+                        </View>
+                     )}
                   </View>
 
 
@@ -279,12 +349,12 @@ export default function Perguntas() {
                      <Text className="text-gray-800 text-xl w-full text-left font-bold">{currentQuestion.text}</Text>
                   </View>
 
-                  <View className="flex pl-8 w-full">
+                  <View className="flex pl-8 pr-4 w-full">
 
                      {currentQuestion.alternatives.map((alt) => (
                         <Pressable
                            key={alt.id}
-                           className={`flex flex-row gap-2 p-2 items-center w-full`}
+                           className={`flex flex-row  gap-2 p-2 items-center w-full`}
                            onPress={() => setSelectedAnswer(alt.id)}
                            disabled={showAnswer}
                         >
@@ -364,7 +434,7 @@ export default function Perguntas() {
             <CustomButton color="yellow" submit={showScore ? handleCheckVideo : showAnswer ? goToNextQuestion : handleAnswer} disable={showScore ? false : !selectedAnswer}>
                <View className="w-64 p-2 rounded-xl flex flex-row items-center justify-center gap-4 bg-yellow-400">
 
-                  {showAnswer &&
+                  {showAnswer && selectedAnswer === currentQuestion.correctAnswerID &&
                      <>
                         <LottieView
                            source={require('../../assets/gifs/confetes.json')}

@@ -6,6 +6,7 @@ import { ScrollView, Text, View } from "react-native";
 import VideoSendModal from "../../Modal/VideoSendModal";
 import ButtonGoBack from "../../MyComponents/ButtonGoBack";
 import FormCadastroVideo from "./FormCadastroVideo";
+import React from "react";
 
 export default function CadastroDeVideo() {
 
@@ -24,7 +25,7 @@ export default function CadastroDeVideo() {
 
                <View
                   style={stylesShadow.shadow}
-                  className="self-center bg-white round-xl flex items-center justify-center rounded-xl px-4 flex-row gap-2"
+                  className="self-center bg-white flex items-center justify-center rounded-full px-4 flex-row gap-2"
                >
                   <Text className="text-2xl font-black text-yellow-400">Cadastrar Vídeo</Text>
                   <MaterialCommunityIcons name="video-plus" size={32} color={'#facc15'} />

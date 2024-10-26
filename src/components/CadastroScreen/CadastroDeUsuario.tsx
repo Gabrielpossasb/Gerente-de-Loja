@@ -15,6 +15,7 @@ import ButtonGoBack from "../MyComponents/ButtonGoBack";
 import CustomButton from "../MyComponents/CustomButton";
 import CustomInput from "../MyComponents/CustomInput";
 import CustomPicker from "../MyComponents/CustomPicker";
+import React from "react";
 
 const formatDate = (date: Date): string => {
    const day = date.getDate().toString().padStart(2, '0');
@@ -111,7 +112,7 @@ export default function CadastroUsuario() {
 
                <View
                   style={stylesShadow.shadow}
-                  className="self-center bg-white round-xl flex items-center justify-center rounded-xl px-4 flex-row gap-2"
+                  className="self-center bg-white  flex items-center justify-center rounded-full px-4 flex-row gap-2"
                >
                   <Text className="text-2xl font-black text-yellow-400">Cadastrar Usuário</Text>
                   <MaterialCommunityIcons name="account-plus" size={32} color={'#facc15'} />
@@ -182,9 +183,12 @@ export default function CadastroUsuario() {
                               uid: uid,
                               watchedVideos: [],
                               score: 0,
+                              pa: 0,
+                              sale: 0,
                               createdAt: formatDate(new Date()),
                               fixedTrackID: values.trilha,
-                              weeklyTrackID: 'semana'
+                              weeklyTrackID: 'semana',
+                              welcomeTrackCompleted: false
                            }
 
                            // Adicionar informações adicionais ao Firestore
@@ -296,7 +300,7 @@ export default function CadastroUsuario() {
                            />
 
                            <View className=" mt-4">
-                              <CustomButton color="yellow" submit={handleSubmit} disable={loadingCreateUser}>
+                              <CustomButton color="yellow" submit={handleSubmit} disable={loadingCreateUser || password == ''}>
                                  {loadingCreateUser ? (
                                     <View className="flex w-64 p-2 rounded-xl bg-yellow-400">
                                        <View className="flex items-center justify-center animate-spin">

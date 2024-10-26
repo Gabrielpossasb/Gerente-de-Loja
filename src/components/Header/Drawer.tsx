@@ -87,6 +87,10 @@ export default function Drawer({ openDrawer, closeDrawer, openLogoutModal }: Dra
                   <MaterialCommunityIcons name="map" size={24} color={'#facc15'} />
                </ItemDrawer>
 
+               <ItemDrawer text="Ranking" screen="Ranking" closeDrawer={closeDrawer}>
+                  <MaterialCommunityIcons name="podium-gold" size={24} color={'#facc15'} />
+               </ItemDrawer>
+
                {userData.acesso == 'admin' && (
                   <ItemDrawer text="Cadastro" screen="CadastroStack" closeDrawer={closeDrawer}>
                      <MaterialCommunityIcons name="account-plus" size={24} color={'#facc15'} />

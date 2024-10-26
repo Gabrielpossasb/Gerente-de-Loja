@@ -1,34 +1,37 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { NavigationProp, RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { MotiView } from "moti";
 import { useEffect } from "react";
 import { BackHandler, Pressable, Text, View } from "react-native";
 import { CadastroStackRoutesParamsList } from "../../routes/cadastro.stack.routes";
+import React from "react";
+import { TabParamList } from "@/src/routes/tab.routes";
 
 export default function ButtonGoBack() {
 
+   const route = useRoute<RouteProp<CadastroStackRoutesParamsList, 'editUsuario'>>();
+   const from = route.params?.from; // Uso de "?" para evitar erro se params for undefined
+   
+   const navigate = useNavigation<NavigationProp<TabParamList>>()
    const navigation = useNavigation<NavigationProp<CadastroStackRoutesParamsList>>()
 
-   function customGoBack() {
-      if (navigation.canGoBack()) {
+   const onBackPress = () => {
+      if (from === 'ranking') {
+         navigate.reset({
+            index: 0,
+            routes: [{ name: 'Ranking' }],
+         });
+      } else if (navigation.canGoBack()) {
+         // Volta normalmente se houver histórico de navegação
          navigation.goBack();
       } else {
-         // Volta para a aba 'CadastroStack' se estiver na aba errada
+         // Caso contrário, volta para a aba 'cadastro'
          navigation.navigate('cadastro');
       }
-   }
+      return true;
+   };
 
    useEffect(() => {
-      const onBackPress = () => {
-         if (navigation.canGoBack()) {
-            navigation.goBack();
-         } else {
-            // Volta para a aba 'CadastroStack' se estiver na aba errada
-            navigation.navigate('cadastro');
-         }
-         return true;
-      };
-
       const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
       return () => backHandler.remove();
@@ -36,7 +39,7 @@ export default function ButtonGoBack() {
 
    return (
       <Pressable
-         onPress={customGoBack}
+         onPress={onBackPress}
          className="relative"
 
       >

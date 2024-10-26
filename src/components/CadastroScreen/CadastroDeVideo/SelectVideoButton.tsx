@@ -59,7 +59,7 @@ export default function SelectVideoButton({setVideoURI, videoURI}: SelectVideoBu
                            <Text className="text-white text-xl font-bold">
                               Procurar
                            </Text>
-                           <MaterialCommunityIcons name={'image-search'} size={28} color="#fff" className="" />
+                           <MaterialCommunityIcons name={'video-plus'} size={28} color="#fff" className="" />
                         </>
                      )}
                   </MotiView>

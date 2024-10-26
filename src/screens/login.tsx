@@ -32,7 +32,6 @@ export default function Login() {
 			.catch((error) => {
 				setLogin(false)
 			});
-
 	}
 
 	return (

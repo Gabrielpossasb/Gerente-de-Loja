@@ -3,13 +3,13 @@ import Perguntas from "../components/TreinamentoScreen/Perguntas";
 import Trilha from "../components/TreinamentoScreen/Trilha";
 import VideoComponent from "../components/TreinamentoScreen/VideoComponent";
 import Treinamento from "../screens/treinamento";
-import { VideoInfoProps } from "../types/customTypes";
+import { trilhaFixedType, trilhaSemanaType, VideoInfoProps } from "../types/customTypes";
 
 export type TreinamentoStackRoutesParamsList = {
     Treinamento: undefined;
-    Trilha: undefined;
-    PlayerVideo: { videoID: string };
-    Perguntas: { videoInfo: VideoInfoProps };
+    Trilha: { key: 'semana' | 'fixa' };
+    PlayerVideo: { videoID: string, uniqueID: string };
+    Perguntas: { videoInfo: VideoInfoProps, uniqueID: string  };
 };
 
 const Stack = createNativeStackNavigator<TreinamentoStackRoutesParamsList>();

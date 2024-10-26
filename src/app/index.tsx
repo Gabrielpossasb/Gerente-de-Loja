@@ -1,8 +1,9 @@
 import Routes from "@/src/routes";
-import { Alert, BackHandler, StatusBar } from "react-native";
-import '../styles/global.css'
+import { useNavigation } from "@react-navigation/native";
 import { useEffect } from "react";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { Alert, BackHandler, StatusBar } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import '../styles/global.css';
 
 export default function Page() {
 
@@ -45,12 +46,12 @@ export default function Page() {
    }, []);
 
    return (
-      <>
+      <GestureHandlerRootView style={{ flex: 1 }}>
          <StatusBar
             backgroundColor="#000" // Funciona apenas no Android
             barStyle="dark-content" // Define o estilo do conteúdo da StatusBar
          />
          <Routes />
-      </>
+      </GestureHandlerRootView>
    );
 }

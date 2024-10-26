@@ -32,8 +32,8 @@ export default function Header() {
             </View>
 
             <View className='flex flex-row w-16 items-center justify-center gap-1'>
-               <Text className='text-3xl -mb-3 font-bold text-yellow-400'>{userData.score}</Text>
-               <Image width={40} height={40} resizeMode='contain' className='max-w-10 max-h-10 w-10 h-10 bg-contain mb-2' source={require('../../assets/images/diamante.png')} />
+               <Text className='text-3xl font-bold text-yellow-400'>{userData.score}</Text>
+               <Image width={40} height={40} resizeMode='contain' className='w-6 h-6 bg-contain' source={require('../../assets/images/diamante.png')} />
             </View>
 
             <Pressable onPress={() => setOpenDrawer(true)}>
@@ -43,7 +43,7 @@ export default function Header() {
                      transition={{ duration: 200 }}
                      className=""
                   >
-                     <MaterialCommunityIcons name="menu" size={42} color="rgb(234 179 8)" />
+                     <MaterialCommunityIcons name="menu" size={36} color="rgb(234 179 8)" />
                   </MotiView>
                )}
             </Pressable>

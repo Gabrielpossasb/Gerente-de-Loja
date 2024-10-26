@@ -13,6 +13,8 @@ import CustomPicker from "../../MyComponents/CustomPicker";
 import CadastroPerguntas from "./CadastroPerguntas";
 import SelectVideoButton from "./SelectVideoButton";
 import { Question, VideoInfoProps } from "@/src/types/customTypes";
+import { createThumbnail } from 'react-native-create-thumbnail';
+import SelectImageButton from "./SelectImageButton";
 
 const formatDate = (date: Date): string => {
    const day = date.getDate().toString().padStart(2, '0');
@@ -42,7 +44,7 @@ const checkVideoID: HttpsCallable<{ videoID: string }, CheckVideoIDResult> = htt
 const validationSchema = Yup.object().shape({
    name: Yup.string().required('Título é obrigatório'),
    categoria: Yup.string().required('Categoria é obrigatório'),
-   colecao: Yup.string().required('Sub-Categoria é obrigatório'),
+   subCategoria: Yup.string().required('Sub-Categoria é obrigatório'),
    cargo: Yup.string().required('Cargo é obrigatório'),
    videoID: Yup.string().required('VideoID é obrigatório'),
    tutor: Yup.string().required('Tutor(a) é obrigatório'),
@@ -55,6 +57,7 @@ type FormCadastroVideoPROPS = {
 export default function FormCadastroVideo({ videoSend }: FormCadastroVideoPROPS) {
 
    const [videoURI, setVideoURI] = useState('')
+   const [thumbnailURI, setThumbnailURI] = useState('');
 
    const [loadingSubmit, setLoadingSubmit] = useState(false)
 
@@ -65,7 +68,7 @@ export default function FormCadastroVideo({ videoSend }: FormCadastroVideoPROPS)
          initialValues={{
             cargo: '',
             categoria: '',
-            colecao: '',
+            subCategoria: '',
             name: '',
             videoID: '',
             tutor: ''
@@ -75,6 +78,11 @@ export default function FormCadastroVideo({ videoSend }: FormCadastroVideoPROPS)
 
             if (videoURI == '') {
                Alert.alert('Nehum video foi selecionado!')
+               return;
+            }
+
+            if (thumbnailURI === '') {
+               Alert.alert('Nenhuma thumbnail foi selecionada!');
                return;
             }
 
@@ -101,14 +109,14 @@ export default function FormCadastroVideo({ videoSend }: FormCadastroVideoPROPS)
                }
             }
 
-            if (success && videoURI) {
+            if (success && videoURI && thumbnailURI) {
                try {
-                  const response = await fetch(videoURI);
-                  const blob = await response.blob();
-                  const storageRef = ref(storage, `Treinamento/${values.videoID}`);
-                  const uploadTask = uploadBytesResumable(storageRef, blob);
+                  const videoResponse = await fetch(videoURI);
+                  const videoBlob = await videoResponse.blob();
+                  const videoStorageRef = ref(storage, `Treinamento/${values.videoID}`);
+                  const videoUploadTask = uploadBytesResumable(videoStorageRef, videoBlob);
 
-                  uploadTask.on(
+                  videoUploadTask.on(
                      'state_changed',
                      (snapshot) => {
                         // Pode adicionar código para exibir o progresso
@@ -117,41 +125,50 @@ export default function FormCadastroVideo({ videoSend }: FormCadastroVideoPROPS)
                         //setFieldError('videoData', error.message);
                         setSubmitting(false);
                      },
-                     () => {
-                        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
-                           console.log('File available at', downloadURL);
-                           // Aqui, você pode criar a entrada no Firestore com a URL do vídeo
+                     async () => {
+                        const videoDownloadURL = await getDownloadURL(videoUploadTask.snapshot.ref);
 
+                        const thumbnailResponse = await fetch(thumbnailURI);
+                        const thumbnailBlob = await thumbnailResponse.blob();
+                        const thumbnailRef = ref(storage, `Thumbnails/${values.videoID}_thumbnail`);
+                        const thumbnailUploadTask = uploadBytesResumable(thumbnailRef, thumbnailBlob);
+
+                        thumbnailUploadTask.on('state_changed', null, (error) => {
+                           setSubmitting(false);
+                        }, async () => {
+                           const thumbnailDownloadURL = await getDownloadURL(thumbnailUploadTask.snapshot.ref);
+   
                            const videoInfo: VideoInfoProps = {
                               cargo: values.cargo,
                               categoria: values.categoria,
-                              colecao: values.colecao,
+                              subCategoria: values.subCategoria,
                               name: values.name,
-                              url: downloadURL,
+                              url: videoDownloadURL,
+                              thumbnail: thumbnailDownloadURL,
                               videoID: values.videoID,
                               tutor: values.tutor,
                               createdAt: formatDate(new Date()),
                               questions: questions
-                           }
-
+                           };
+   
                            await setDoc(doc(db, 'treinamento', values.videoID), videoInfo);
-
+   
                            setSubmitting(false);
-                           setLoadingSubmit(false)
-                           videoSend()
-                           setVideoURI('')
-                           setQuestions([])
+                           setLoadingSubmit(false);
+                           videoSend();
+                           setVideoURI('');
+                           setThumbnailURI('');
+                           setQuestions([]);
                            resetForm({
                               values: {
                                  videoID: generateUniqueID(),
                                  cargo: '',
                                  categoria: '',
-                                 colecao: '',
+                                 subCategoria: '',
                                  name: '',
                                  tutor: ''
                               }
-                           })
-
+                           });
                         });
                      }
                   );
@@ -189,6 +206,19 @@ export default function FormCadastroVideo({ videoSend }: FormCadastroVideoPROPS)
 
                   </View>
 
+                  <View className="flex items-center gap-2 mb-6">
+                     <Text className="block ml-4 text-xl font-bold text-gray-600">Selecione a Thumbnail:</Text>
+                     {thumbnailURI !== '' && (
+                        <View className="flex flex-row gap-2">
+                           <Text className="block ml-4 text-2xl font-bold text-green-500 underline">Selecionado</Text>
+                           <View className="flex bg-green-500 p-1 items-center justify-center rounded-full">
+                              <MaterialCommunityIcons name="check" color={'#fff'} size={22} />
+                           </View>
+                        </View>
+                     )}
+                     <SelectImageButton setImageURI={(val) => setThumbnailURI(val)} imageURI={thumbnailURI} />
+                  </View>
+
                   <Field
                      name="name"
                      component={CustomInput}
@@ -213,11 +243,11 @@ export default function FormCadastroVideo({ videoSend }: FormCadastroVideoPROPS)
                   />
 
                   <Field
-                     name="colecao"
+                     name="subCategoria"
                      component={CustomPicker}
                      text="Selecione a Sub-categoria"
-                     error={errors.colecao}
-                     touched={touched.colecao}
+                     error={errors.subCategoria}
+                     touched={touched.subCategoria}
                      options={[
                         { label: 'Selecione uma sub-categoria', value: '' },
                         { label: 'Sub-categoria 1', value: 'sub-categoria 1' },

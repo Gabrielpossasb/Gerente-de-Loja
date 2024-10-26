@@ -1,6 +1,7 @@
 import { CadastroStackRoutesParamsList } from "@/src/routes/cadastro.stack.routes";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { MotiView } from "moti";
+import React from "react";
 import { View, ViewProps } from "react-native";
 import Svg, { Ellipse } from "react-native-svg";
 

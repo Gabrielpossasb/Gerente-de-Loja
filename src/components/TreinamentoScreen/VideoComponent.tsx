@@ -33,7 +33,7 @@ export default function VideoComponent() {
    const [video, setVideo] = useState<VideoInfoProps>({} as VideoInfoProps);
 
    const showQuestions = async () => {
-      navigation.navigate('Perguntas', { videoInfo: video })
+      navigation.navigate('Perguntas', { videoInfo: video, uniqueID: params.uniqueID })
       setProgress(0); // Reseta o progresso do vídeo
       await videoRef.current?.setPositionAsync(0); // Reposiciona o vídeo ao início
       setIsPlaying(false)
@@ -47,6 +47,22 @@ export default function VideoComponent() {
          videoRef.current?.playAsync();
       }
       setIsPlaying(!isPlaying);
+   };
+
+   const advance10Seconds = async () => {
+      const status = await videoRef.current?.getStatusAsync();
+      if (status && status.isLoaded) {
+         const newPosition = status.positionMillis + 10000; // 10 segundos
+         await videoRef.current?.setPositionAsync(newPosition);
+      }
+   };
+
+   const rewind10Seconds = async () => {
+      const status = await videoRef.current?.getStatusAsync();
+      if (status && status.isLoaded) {
+         const newPosition = Math.max(0, status.positionMillis - 10000); // 10 segundos
+         await videoRef.current?.setPositionAsync(newPosition);
+      }
    };
 
    const handleProgress = throttle((playbackStatus: any) => {
@@ -112,9 +128,9 @@ export default function VideoComponent() {
             navigation.goBack();
             return true; // Retornar true impede o comportamento padrão de fechar o app
          };
-   
+
          BackHandler.addEventListener('hardwareBackPress', onBackPress);
-   
+
          return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
       }, [])
    );
@@ -130,7 +146,7 @@ export default function VideoComponent() {
             </View>
          )}
 
-         <Pressable className={`${isLoading ? 'opacity-0' : 'opacity-100'}`} style={{ flex: 1 }}>
+         <Pressable onPress={toggleControls} className={`${isLoading ? 'opacity-0' : 'opacity-100'}`} style={{ flex: 1 }}>
             <Video
                ref={videoRef}
                source={{ uri: video.url }}
@@ -147,8 +163,8 @@ export default function VideoComponent() {
          </Pressable>
 
          <MotiView
-            animate={{ opacity: controlsVisible ? 1 : 0 }}
-            transition={{ type: "timing", duration: 300 }}
+            animate={{ opacity: controlsVisible ? 1 : 0, translateX: controlsVisible ? 0 : 800 }}
+            transition={{ opacity: {type: "timing", duration: 300}, translateX: {type: 'timing', duration: 0} }}
             className=" absolute left-0 top-0 right-0 bottom-0"
          >
             <Pressable className=" flex flex-1" onPress={toggleControls}>
@@ -157,19 +173,32 @@ export default function VideoComponent() {
                   <ButtonGoBack />
                </View>
 
-               <Pressable
-                  onPress={handlePlayPause}
-                  className="bg-slate-200/40 rounded-full p-2 flex items-center justify-center absolute"
-                  style={{
-                     top: '50%',
-                     left: '50%',
-                     transform: [{ translateX: -35 }, { translateY: -50 }],
-                  }}
+               <View
+                  className="absolute flex flex-row gap-14 items-center justify-center self-center top-[45%]"
                >
-                  <Ionicons name={isPlaying ? 'pause' : 'play'} size={48} color="white" />
-               </Pressable>
+                  <Pressable
+                     onPress={rewind10Seconds}
+                     className="bg-slate-200/40 rounded-full p-2 w-16 h-16 flex items-center justify-center"
+                  >
+                     <Ionicons name="play-back" size={32} color="white" />
+                  </Pressable>
 
-               <View className="absolute bottom-2 rounded-full self-center px-6 p-2 gap-1 flex-row justify-between items-center bg-[rgba(0,0,0,0.5)]">
+                  <Pressable
+                     onPress={handlePlayPause}
+                     className="bg-slate-200/40 rounded-full p-2 w-20 h-20 flex items-center justify-center"
+                  >
+                     <Ionicons name={isPlaying ? 'pause' : 'play'} size={48} color="white" />
+                  </Pressable>
+
+                  <Pressable
+                     onPress={advance10Seconds}
+                     className="bg-slate-200/40 rounded-full p-2 w-16 h-16 flex items-center justify-center"
+                  >
+                     <Ionicons name="play-forward" size={32} color="white" />
+                  </Pressable>
+               </View>
+
+               <View className="absolute bottom-4 rounded-full self-center px-6 p-2 gap-1 flex-row justify-between items-center bg-[rgba(0,0,0,0.5)]">
 
                   <Text className="text-yellow-400 text-xl font-bold">{formatTime(progress * duration)}</Text>
                   <Text className="text-white text-xl font-bold">/ {formatTime(duration)}</Text>
@@ -185,11 +214,11 @@ export default function VideoComponent() {
          {goQuestions &&
             <Modal isOpen={goQuestions} >
                <View className="bg-white m-6 flex p-2 py-14 items-center gap-8 rounded-xl shadow-lg w-full border-2 border-yellow-500">
-                  
+
                   <Pressable onPress={() => setGoQuestions(false)} className="absolute left-0 top-0 p-2">
-                     <MaterialCommunityIcons name="close" size={28} color={'#000'}/>
+                     <MaterialCommunityIcons name="close" size={28} color={'#000'} />
                   </Pressable >
-                  
+
                   <View className="flex gap-8">
                      <Text className=" text-gray-800 font-bold text-4xl text-center ">Hora do desafio!</Text>
                      <Text className=" text-gray-600 font-bold text-xl text-center ">Está pronto para responder algumas perguntas? 🤔</Text>

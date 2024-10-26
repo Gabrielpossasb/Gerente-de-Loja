@@ -91,7 +91,7 @@ export default function ModalPerguntas({ isVisible, onAddQuestion, onClose, edit
                </View>
             </Pressable>
 
-            <View className="w-72 gap-6">
+            <View className="w-80 gap-6">
                {currentPage === 1 && (
                   <>
                      <View>
@@ -105,6 +105,9 @@ export default function ModalPerguntas({ isVisible, onAddQuestion, onClose, edit
                            onChangeText={setText}
                            className="bg-white h-44 border-2 text-gray-900 text-lg rounded-lg border-yellow-400 focus:border-yellow-500 block p-2 outline-none"
                         />
+                        <Text className="block text-sm font-bold text-gray-500">
+                           *Coloque o ponto de interrogação no final.
+                        </Text>
                      </View>
 
                      <View>

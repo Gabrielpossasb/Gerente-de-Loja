@@ -1,13 +1,14 @@
 type FormProps = {
    name: string,
    categoria: string,
-   colecao: string,
+   subCategoria: string,
    cargo: string,
    tutor: string,
 }
 
 export type VideoInfoProps = FormProps & {
    url: string,
+   thumbnail: string,
    videoID: string,
    createdAt: string,
    questions: Question[]
@@ -35,12 +36,15 @@ export interface userDataType {
    uid: string,
    watchedVideos: {
       videoID: string,
-      watch: boolean
+      uniqueID: string,
    }[],
    score: number,
+   sale: number,
+   pa: number,
    weeklyTrackID: string,
    fixedTrackID: string,
-   createdAt: string
+   createdAt: string,
+   welcomeTrackCompleted: boolean,
 }
 
 export interface trilhaFixedType {
@@ -50,7 +54,9 @@ export interface trilhaFixedType {
    createdAt: string,
    videos: {
       videoID: string,
-      watch: boolean
+      watch: boolean,
+      uniqueID: string,
+      isLocked: boolean
    }[],
 }
 export interface trilhaSemanaType {
@@ -61,6 +67,41 @@ export interface trilhaSemanaType {
    start: string,
    videos: {
       videoID: string,
-      watch: boolean
+      watch: boolean,
+      uniqueID: string,
+      isLocked: boolean
    }[],
+}
+
+export interface trilhaSemanaTypeCadastro {
+   id: string,
+   name: string,
+   description: string,
+   end: string,
+   start: string,
+   videos: {
+      videoID: string,
+      uniqueID: string,
+   }[],
+}
+export interface trilhaFixedTypeCadastro {
+   id: string,
+   name: string,
+   description: string,
+   createdAt: string,
+   videos: {
+      videoID: string,
+      uniqueID: string,
+   }[],
+}
+
+export interface videoTrilha {
+   id: string;
+   title: string;
+   categoria: string,
+   subCategoria: string,
+   cargo: string,
+   tutor: string,
+   createdAt: string,
+   thumbnail: string,
 }

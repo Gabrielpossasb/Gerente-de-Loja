@@ -5,10 +5,11 @@ import { Pressable, View, ViewProps } from "react-native";
 type PROPS = ViewProps & {
    submit: () => void,
    disable: boolean,
-   color: 'yellow' | 'red' | 'green'
+   color: 'yellow' | 'red' | 'green',
+   rounded?: boolean;
 }
 
-export default function CustomButton({ submit, disable, color, children, ...rest }: PROPS ) {
+export default function CustomButton({ submit, disable, color, rounded = false, children, ...rest }: PROPS ) {
 
    const [selectColor, setSelectColor] = useState('')
 
@@ -41,7 +42,7 @@ export default function CustomButton({ submit, disable, color, children, ...rest
                </MotiView>
 
                <View 
-                  className={`absolute top-4 -z-10 left-0 right-0 -bottom-[6px] rounded-xl`} 
+                  className={`absolute top-[6px] -z-10 left-0 right-0  ${rounded ? 'rounded-full -bottom-[5px]' :'rounded-xl -bottom-[6px]'}`} 
                   style={{ backgroundColor: selectColor}}
                />
             </View>
