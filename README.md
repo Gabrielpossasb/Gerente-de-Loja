@@ -1,50 +1,91 @@
-# Welcome to your Expo app 👋
+# Gerente de Loja
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicação mobile desenvolvida com **React Native** usando o framework **Expo** . O projeto tem como objetivo auxiliar o gerenciamento das lojas da rede, disponibilizando trilhas de treinamento em vídeo, check lists de atividades e um sistema de ranking de desempenho para os colaboradores .
 
-## Get started
+## Principais Funcionalidades
 
-1. Install dependencies
+- **Autenticação** de usuários utilizando o Firebase Authentication;
+ 
+- **Trilhas de Treinamento** (fixas e semanais) com controle de progresso;
+ 
+- **Check List** integrado à câmera do dispositivo;
+ 
+- **Ranking** de classificação dos colaboradores;
+ 
+- Área de **cadastro** de vídeos e trilhas (acesso restrito para administradores);
+- Integração com Firestore e Storage para salvar dados e vídeos.
 
+## Tecnologias Utilizadas
+
+- [ React Native ]( https://reactnative.dev/ ) com [ Expo ]( https://expo.dev/ );
+- [ TypeScript ]( https://www.typescriptlang.org/ );
+- [ Firebase ]( https://firebase.google.com/ ) (Autenticação, Firestore, Armazenamento e Funções);
+- [ React Navigation ]( https://reactnavigation.org/ ) para navegação entre telas;
+- [ Tailwind ]( https://tailwindcss.com/ ) via NativeWind para estilização;
+- Outras bibliotecas auxiliares como Moti, Lottie, React Native Reanimated, entre outras.
+
+## Pré-requisitos
+
+- [ Node.js ]( https://nodejs.org/ ) (recomenda‑se a versão 16 ou superior);
+- Gerenciador de pacotes [ npm ]( https://www.npmjs.com/ ) ou [ yarn ]( https://yarnpkg.com/ );
+- [ Expo CLI ]( https://docs.expo.dev/get-started/installation/ ) instalado globalmente ou via `npx` .
+
+## Instalação e Execução
+
+1. Instale as dependências do projeto:
    ```bash
-   npm install
+   instalação npm
    ```
-
-2. Start the app
-
+2. Inicie o aplicativo em modo de desenvolvimento:
    ```bash
-    npx expo start
+   início da npx expo
    ```
+   O Expo exibirá um QRCode para abrir o aplicativo em um dispositivo físico ou emulador.
 
-In the output, you'll find options to open the app in a
+## Scripts Úteis
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- `npm run lint` – executa a verificação de lint via Expo;
+ 
+- `npm test` – executa os testes com Jest;
+ 
+- `npm run android` ou `npm run ios` – abre o aplicativo diretamente no emulador Android ou iOS.
+ 
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Estrutura do Projeto
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+fonte/
+  app/#ponto de entrada da aplicação
+  assets/ # imagens e recursos estáticos
+  componentes/ # componentes reutilizáveis
+  gancho/ # ganchos personalizados
+  rotas/ #configurações de navegação
+  telas/ # telas principais
+  services/ #configurações do Firebase e serviços
+  estilos/ # arquivos de estilo
+  types/ # definições de tipos e interfaces
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Os arquivos de configuração do Expo e do Firebase ficam na raiz do projeto .
 
-## Learn more
+## Build para Produção
 
-To learn more about developing your project with Expo, look at the following resources:
+Para gerar builds para distribuição, utilize o [ EAS CLI ]( https://docs.expo.dev/eas/ ). Exemplo para Android :
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+np x eas build --plataforma android
+```
 
-## Join the community
+Antes de gerar builds é necessário possuir uma conta no Expo e configurar as credenciais das lojas (Play Store/App Store).
 
-Join our community of developers creating universal apps.
+## Contribuindo
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Faça um fork deste repositório;
+2. Crie um branch para sua funcionalidade: `git checkout -b minha-feature` ;
+3. Commit suas alterações: `git commit -m "feat: meu feature"` ;
+4. Envie um branch: `git push origin minha-feature` ;
+5. Abra um Pull Request.
+
+## Licença
+
+Este projeto é distribuído sob licença MIT. Consulte o arquivo `LICENSE` para mais detalhes .
