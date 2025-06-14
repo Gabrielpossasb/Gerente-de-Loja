@@ -46,7 +46,7 @@ export default function Page() {
    }, []);
 
    return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView >
          <StatusBar
             backgroundColor="#000" // Funciona apenas no Android
             barStyle="dark-content" // Define o estilo do conteúdo da StatusBar
